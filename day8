@@ -1,0 +1,113 @@
+fn main() {
+    let input = include_str!("day8.prod");
+    let width = input.lines().next().unwrap().len();
+    let height = input.lines().collect::<Vec<&str>>().len();
+    let mut grid = vec![vec![0; width]; height];
+    for (i, l) in input.lines().enumerate() {
+        for (j, c) in l.chars().enumerate() {
+            grid[i][j] = usize::try_from(c.to_digit(10).unwrap()).unwrap();
+        }
+    }
+
+    let mut ans = 2 * width + 2 * height - 4;
+    for i in 1..height - 1 {
+        for j in 1..width - 1 {
+            if is_visible(i, j, height, width, &grid) {
+                ans += 1;
+            }
+        }
+    }
+    println!("Part1: {}", ans);
+
+    let mut ans = 0;
+    for i in 1..height - 1 {
+        for j in 1..width - 1 {
+            ans = ans.max(scenic_score(i, j, height, width, &grid));
+        }
+    }
+    println!("Part2: {}", ans);
+}
+
+fn is_visible(row: usize, col: usize, height: usize, width: usize, grid: &Vec<Vec<usize>>) -> bool {
+    let current = grid[row][col];
+    let mut highest = 0;
+    for i in 0..height {
+        if i != row {
+            highest = highest.max(grid[i][col]);
+        }
+        if i == row || i == height - 1 {
+            if highest < current {
+                return true;
+            }
+            highest = 0;
+        }
+    }
+    for j in 0..width {
+        if j != col {
+            highest = highest.max(grid[row][j]);
+        }
+        if j == col || j == width - 1 {
+            if highest < current {
+                return true;
+            }
+            highest = 0;
+        }
+    }
+    false
+}
+
+fn scenic_score(
+    row: usize,
+    col: usize,
+    height: usize,
+    width: usize,
+    grid: &Vec<Vec<usize>>,
+) -> usize {
+    let current = grid[row][col];
+    let mut ans = 1;
+
+    let mut highest = 0;
+    let mut view = 1;
+    for i in (1..row).rev() {
+        if grid[i][col] < current {
+            view += 1;
+            highest = highest.max(grid[i][col]);
+        } else {
+            break;
+        }
+    }
+    ans *= view;
+
+    view = 1;
+    for i in row + 1..height - 1 {
+        if grid[i][col] < current {
+            view += 1;
+            highest = highest.max(grid[i][col]);
+        } else {
+            break;
+        }
+    }
+    ans *= view;
+
+    view = 1;
+    for j in (1..col).rev() {
+        if grid[row][j] < current {
+            view += 1;
+            highest = highest.max(grid[row][j]);
+        } else {
+            break;
+        }
+    }
+    ans *= view;
+
+    view = 1;
+    for j in col + 1..width - 1 {
+        if grid[row][j] < current {
+            view += 1;
+            highest = highest.max(grid[row][j]);
+        } else {
+            break;
+        }
+    }
+    ans * view
+}
